@@ -1,8 +1,10 @@
 import L from 'leaflet';
 import { ExternalLink, MapPinned, Navigation } from 'lucide-react';
+import { useState } from 'react';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import Reveal from '../components/Reveal';
 import SectionHeading from '../components/SectionHeading';
+import { mapThemes } from '../data/mapThemes';
 import { mosqueProfile } from '../data/mosque';
 
 const position = [mosqueProfile.coordinates.lat, mosqueProfile.coordinates.lng];
@@ -16,6 +18,8 @@ const mosqueIcon = L.divIcon({
 });
 
 export default function LocationSection() {
+  const [activeThemeId, setActiveThemeId] = useState('voyager');
+  const activeTheme = mapThemes.find((theme) => theme.id === activeThemeId) || mapThemes[0];
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${mosqueProfile.coordinates.lat},${mosqueProfile.coordinates.lng}`;
 
   return (
@@ -54,6 +58,34 @@ export default function LocationSection() {
                 Buka Rute
                 <ExternalLink size={17} />
               </a>
+
+              <div className="rounded-lg border border-border bg-white p-5 shadow-soft">
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-text">Tema Peta</p>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  {mapThemes.map((theme) => {
+                    const isActive = theme.id === activeTheme.id;
+
+                    return (
+                      <button
+                        aria-pressed={isActive}
+                        className={`rounded-md border px-3 py-3 text-left transition ${
+                          isActive
+                            ? 'border-primary bg-primary text-white'
+                            : 'border-border bg-background text-heading hover:border-primary/30 hover:bg-white'
+                        }`}
+                        key={theme.id}
+                        onClick={() => setActiveThemeId(theme.id)}
+                        type="button"
+                      >
+                        <span className="block text-sm font-bold">{theme.label}</span>
+                        <span className={`mt-1 block text-xs leading-5 ${isActive ? 'text-white/74' : 'text-text'}`}>
+                          {theme.description}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </Reveal>
 
@@ -61,8 +93,9 @@ export default function LocationSection() {
             <div className="overflow-hidden rounded-lg border border-border bg-white p-2 shadow-soft">
               <MapContainer center={position} className="h-[430px] w-full rounded-md" scrollWheelZoom={false} zoom={16}>
                 <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution={activeTheme.attribution}
+                  key={activeTheme.id}
+                  url={activeTheme.url}
                 />
                 <Marker icon={mosqueIcon} position={position}>
                   <Popup>
